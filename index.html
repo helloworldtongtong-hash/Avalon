@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=10">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>阿瓦隆桌游语音助手</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide@05440/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
     <style>
         :root {
             --background-dark: #1a1a1a;
@@ -13,41 +13,48 @@
             --primary-dark: #6366f1;
             --text-dark: #f3f4f6;
             --text-secondary-dark: #9ca3af;
+
             --background-light: #f3f4f6;
             --surface-light: #ffffff;
             --primary-light: #4f46e5;
             --text-light: #1f2937;
             --text-secondary-light: #6b7280;
         }
+
         .dark body {
             background-color: var(--background-dark);
             color: var(--text-dark);
         }
+
         body {
             background-color: var(--background-light);
             color: var(--text-light);
             font-family: 'Inter', sans-serif;
         }
+
         .surface {
             background-color: var(--surface-light);
         }
+
         .dark .surface {
             background-color: var(--surface-dark);
         }
+
         .primary-text { color: var(--primary-light); }
         .dark .primary-text { color: var(--primary-dark); }
+
         .secondary-text { color: var(--text-secondary-light); }
         .dark .secondary-text { color: var(--text-secondary-dark); }
         
         .glass-morphism {
-            background: rgba(255, 255, 255, 01);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 02);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .dark .glass-morphism {
-            background: rgba(0, 0, 0, 01);
-            border: 1px solid rgba(255, 255, 255, 01);
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         @keyframes pulse {
@@ -55,12 +62,12 @@
                 opacity: 1;
             }
             50% {
-                opacity: 05;
+                opacity: 0.5;
             }
         }
         
         .animate-pulse {
-            animation: pulse 2s cubic-bezier(04, 0, 06, 1) infinite;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
         
         .audio-wave {
@@ -74,17 +81,17 @@
             height: 12px;
             background-color: var(--primary-light);
             border-radius: 3px;
-            animation: wave 12s ease-in-out infinite;
+            animation: wave 1.2s ease-in-out infinite;
         }
         
         .dark .audio-wave .bar {
             background-color: var(--primary-dark);
         }
         
-        .audio-wave .bar:nth-child(2) { animation-delay: 01s; }
-        .audio-wave .bar:nth-child(3) { animation-delay: 02s; }
-        .audio-wave .bar:nth-child(4) { animation-delay: 03s; }
-        .audio-wave .bar:nth-child(5) { animation-delay: 04s; }
+        .audio-wave .bar:nth-child(2) { animation-delay: 0.1s; }
+        .audio-wave .bar:nth-child(3) { animation-delay: 0.2s; }
+        .audio-wave .bar:nth-child(4) { animation-delay: 0.3s; }
+        .audio-wave .bar:nth-child(5) { animation-delay: 0.4s; }
         
         @keyframes wave {
             0%, 100% {
@@ -227,10 +234,15 @@
 
         startRecordingBtn.addEventListener('click', async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Create an audio context on user interaction to unlock audio on iOS
+                if (!window.audioContext) {
+                    window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true } });
                 mediaRecorder = new MediaRecorder(stream);
 
-                mediaRecorderondataavailable = (event) => {
+                mediaRecorder.ondataavailable = (event) => {
                     audioChunks.push(event.data);
                 };
 
@@ -248,7 +260,13 @@
                 updateUI();
             } catch (error) {
                 console.error('Error starting recording:', error);
-                alert('无法访问麦克风，请确保您已授予权限。');
+                if (error.name === 'NotAllowedError') {
+                    alert('您拒绝了麦克风权限，请在浏览器设置中手动开启。');
+                } else if (error.name === 'NotFoundError') {
+                    alert('未检测到麦克风设备，请检查硬件连接。');
+                } else {
+                    alert('无法访问麦克风，请确保您已授予权限。错误详情: ' + error.message);
+                }
             }
         });
 
@@ -339,11 +357,11 @@
                     const utterance = new SpeechSynthesisUtterance(text);
                     // Set voice to a young, sweet female voice
                     // Note: Voice selection may vary based on the user's device
-                    utterancevoice = speechSynthesis.getVoices().find(voice => 
+                    utterance.voice = speechSynthesis.getVoices().find(voice => 
                         voice.name.includes('Chinese') && voice.gender === 'female') || speechSynthesis.getVoices()[0];
-                    utterance.rate = 09; // Slightly slower for clarity
-                    utterance.pitch = 12; // Higher pitch for a sweeter voice
-                    utterancevolume = 10;
+                    utterance.rate = 0.9; // Slightly slower for clarity
+                    utterance.pitch = 1.2; // Higher pitch for a sweeter voice
+                    utterance.volume = 1.0;
                     
                     window.speechSynthesis.speak(utterance);
                 } else {
@@ -414,7 +432,7 @@
                     <div>
                         <h3 class="text-lg font-semibold primary-text">关键词频率</h3>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-                            ${Objectentries(keywords).map(([word, freq]) => `
+                            ${Object.entries(keywords).map(([word, freq]) => `
                                 <div class="flex items-center justify-between p-2 rounded-lg ${freq === '高' ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-700'}">
                                     <span>${word}</span>
                                     <span class="font-bold ${freq === '高' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}">${freq}</span>
