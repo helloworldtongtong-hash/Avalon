@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=10">
+    <title>阿瓦隆桌游语音助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@05440/dist/umd/lucide.min.js"></script>
+    <style>
+        :root {
+            --background-dark: #1a1a1a;
+            --surface-dark: #2c2c2c;
+            --primary-dark: #6366f1;
+            --text-dark: #f3f4f6;
+            --text-secondary-dark: #9ca3af;
+            --background-light: #f3f4f6;
+            --surface-light: #ffffff;
+            --primary-light: #4f46e5;
+            --text-light: #1f2937;
+            --text-secondary-light: #6b7280;
+        }
+        .dark body {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+        body {
+            background-color: var(--background-light);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+        }
+        .surface {
+            background-color: var(--surface-light);
+        }
+        .dark .surface {
+            background-color: var(--surface-dark);
+        }
+        .primary-text { color: var(--primary-light); }
+        .dark .primary-text { color: var(--primary-dark); }
+        .secondary-text { color: var(--text-secondary-light); }
+        .dark .secondary-text { color: var(--text-secondary-dark); }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 01);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 02);
+        }
+        
+        .dark .glass-morphism {
+            background: rgba(0, 0, 0, 01);
+            border: 1px solid rgba(255, 255, 255, 01);
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 05;
+            }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(04, 0, 06, 1) infinite;
+        }
+        
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .audio-wave .bar {
+            width: 3px;
+            height: 12px;
+            background-color: var(--primary-light);
+            border-radius: 3px;
+            animation: wave 12s ease-in-out infinite;
+        }
+        
+        .dark .audio-wave .bar {
+            background-color: var(--primary-dark);
+        }
+        
+        .audio-wave .bar:nth-child(2) { animation-delay: 01s; }
+        .audio-wave .bar:nth-child(3) { animation-delay: 02s; }
+        .audio-wave .bar:nth-child(4) { animation-delay: 03s; }
+        .audio-wave .bar:nth-child(5) { animation-delay: 04s; }
+        
+        @keyframes wave {
+            0%, 100% {
+                height: 4px;
+            }
+            50% {
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="transition-colors duration-500">
+
+    <div id="app" class="max-w-4xl mx-auto p-4 md:p-8">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold primary-text">阿瓦隆语音助手</h1>
+                <p class="secondary-text">梳理发言，洞察全局</p>
+            </div>
+            <button id="theme-toggle" class="p-2 rounded-full surface shadow-lg">
+                <i data-lucide="sun" class="block dark:hidden"></i>
+                <i data-lucide="moon" class="hidden dark:block"></i>
+            </button>
+        </header>
+
+        <main>
+            <div class="surface rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-semibold mb-4">当前游戏状态</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="player-count" class="block text-sm font-medium secondary-text mb-1">玩家数量</label>
+                        <select id="player-count" class="w-full p-2 rounded-lg border surface dark:border-gray-600">
+                            <option>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                            <option>9</option>
+                            <option>10</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="current-round" class="block text-sm font-medium secondary-text mb-1">当前轮次</label>
+                        <input type="number" id="current-round" value="1" min="1" max="5" class="w-full p-2 rounded-lg border surface dark:border-gray-600">
+                    </div>
+                </div>
+            </div>
+
+            <div class="surface rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">语音记录</h2>
+                    <div class="flex items-center gap-2">
+                        <button id="start-recording" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                            <i data-lucide="mic"></i>
+                            <span>开始录音</span>
+                        </button>
+                        <button id="stop-recording" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors" disabled>
+                            <i data-lucide="stop-circle"></i>
+                            <span>停止录音</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="recording-status" class="hidden items-center gap-2 text-red-500 mb-4">
+                    <div class="audio-wave">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    <span class="font-semibold">正在录音...</span>
+                </div>
+                <div id="transcript-container" class="space-y-4 max-h-96 overflow-y-auto p-4 rounded-lg glass-morphism">
+                    <!-- 语音转文字内容将在这里动态添加 -->
+                </div>
+            </div>
+
+            <div class="surface rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">分析与建议</h2>
+                <div class="flex justify-between items-center mb-4">
+                     <button id="clear-transcript" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                            <i data-lucide="trash-2"></i>
+                            <span>清空记录</span>
+                        </button>
+                    <button id="generate-analysis" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                        <i data-lucide="brain"></i>
+                        <span>生成分析</span>
+                    </button>
+                </div>
+                <div id="analysis-result" class="prose dark:prose-invert max-w-none">
+                    <p class="secondary-text italic">点击“生成分析”按钮，获取本轮发言的梳理和建议。</p>
+                </div>
+                 <div class="mt-4 flex justify-end">
+                    <button id="text-to-speech" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors" disabled>
+                        <i data-lucide="volume-2"></i>
+                        <span>语音播报</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Initialize theme from localStorage
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+
+        // Voice Recording
+        const startRecordingBtn = document.getElementById('start-recording');
+        const stopRecordingBtn = document.getElementById('stop-recording');
+        const recordingStatus = document.getElementById('recording-status');
+        const transcriptContainer = document.getElementById('transcript-container');
+        const generateAnalysisBtn = document.getElementById('generate-analysis');
+        const analysisResult = document.getElementById('analysis-result');
+        const clearTranscriptBtn = document.getElementById('clear-transcript');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // Check for browser support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('您的浏览器不支持语音录制功能，请使用Chrome、Firefox或Edge浏览器。');
+            startRecordingBtn.disabled = true;
+        }
+
+        startRecordingBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorderondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioChunks = [];
+                    transcribeAudio(audioBlob);
+                    
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                updateUI();
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                alert('无法访问麦克风，请确保您已授予权限。');
+            }
+        });
+
+        stopRecordingBtn.addEventListener('click', () => {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                updateUI();
+            }
+        });
+
+        function updateUI() {
+            startRecordingBtn.disabled = isRecording;
+            stopRecordingBtn.disabled = !isRecording;
+            recordingStatus.classList.toggle('hidden', !isRecording);
+            recordingStatus.classList.toggle('flex', isRecording);
+        }
+
+        function transcribeAudio(audioBlob) {
+            // In a real app, you would send the audioBlob to a speech-to-text API
+            // Here we simulate the transcription with a delay
+            const simulatedTranscripts = [
+                "我是忠臣，我相信派西维尔已经拿到了信息。",
+                "这轮任务我建议谨慎选人，莫甘娜可能就在我们中间。",
+                "我提议的任务组合是1号、3号和5号，我们都是好人。",
+                "刚才的发言很奇怪，2号可能是坏人，我反对这个任务。",
+                "梅林昨晚看到了什么？希望派西维尔能带领我们走向胜利。"
+            ];
+
+            const randomTranscript = simulatedTranscripts[Math.floor(Math.random() * simulatedTranscripts.length)];
+            
+            setTimeout(() => {
+                const playerCount = document.getElementById('player-count').value;
+                const randomPlayer = Math.floor(Math.random() * playerCount) + 1;
+                
+                const transcriptElement = document.createElement('div');
+                transcriptElement.className = 'p-3 rounded-lg bg-gray-100 dark:bg-gray-700';
+                transcriptElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="font-bold text-indigo-600 dark:text-indigo-400">玩家 ${randomPlayer}:</span>
+                        <span class="text-xs secondary-text">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <p class="mt-1">${randomTranscript}</p>
+                `;
+                transcriptContainer.appendChild(transcriptElement);
+                transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+            }, 1000);
+        }
+        
+        clearTranscriptBtn.addEventListener('click', () => {
+            transcriptContainer.innerHTML = '';
+            analysisResult.innerHTML = '<p class="secondary-text italic">点击“生成分析”按钮，获取本轮发言的梳理和建议。</p>';
+            document.getElementById('text-to-speech').disabled = true;
+        });
+
+        generateAnalysisBtn.addEventListener('click', () => {
+            const transcripts = transcriptContainer.querySelectorAll('p.mt-1');
+            if (transcripts.length === 0) {
+                alert('没有可分析的发言记录！');
+                return;
+            }
+
+            analysisResult.innerHTML = '<p class="animate-pulse">正在分析发言...请稍候</p>';
+            document.getElementById('text-to-speech').disabled = true;
+
+            // In a real app, you would send the transcripts to an LLM API for analysis
+            // Here we simulate the analysis with a delay
+            setTimeout(() => {
+                const playerCount = document.getElementById('player-count').value;
+                const currentRound = document.getElementById('current-round').value;
+                
+                const analysis = generateSimulatedAnalysis(transcripts, playerCount, currentRound);
+                analysisResult.innerHTML = analysis;
+            document.getElementById('text-to-speech').disabled = false;
+
+            // Text-to-Speech functionality
+            const textToSpeechBtn = document.getElementById('text-to-speech');
+            textToSpeechBtn.addEventListener('click', () => {
+                const analysisText = analysisResult.textContent;
+                speakText(analysisText);
+            });
+
+            function speakText(text) {
+                if ('speechSynthesis' in window) {
+                    // Stop any ongoing speech
+                    window.speechSynthesis.cancel();
+                    
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    // Set voice to a young, sweet female voice
+                    // Note: Voice selection may vary based on the user's device
+                    utterancevoice = speechSynthesis.getVoices().find(voice => 
+                        voice.name.includes('Chinese') && voice.gender === 'female') || speechSynthesis.getVoices()[0];
+                    utterance.rate = 09; // Slightly slower for clarity
+                    utterance.pitch = 12; // Higher pitch for a sweeter voice
+                    utterancevolume = 10;
+                    
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert('抱歉，您的浏览器不支持语音合成功能。');
+                }
+            }
+            }, 2000);
+        });
+
+        function generateSimulatedAnalysis(transcripts, playerCount, currentRound) {
+            const transcriptTexts = Array.from(transcripts).map(t => t.textContent);
+            const allText = transcriptTexts.join(' ');
+
+            // Simple keyword analysis
+            const keywords = {
+                '忠臣': allText.includes('忠臣') ? '高' : '低',
+                '派西维尔': allText.includes('派西维尔') ? '高' : '低',
+                '莫甘娜': allText.includes('莫甘娜') ? '高' : '低',
+                '梅林': allText.includes('梅林') ? '高' : '低',
+                '反对': allText.includes('反对') ? '高' : '低',
+            };
+
+            let suspicionList = [];
+            let trustList = [];
+
+            // Simulate suspicion based on keywords
+            if(allText.includes('反对')) {
+                suspicionList.push('2号');
+            }
+            if(allText.includes('奇怪')) {
+                suspicionList.push('4号');
+            }
+            
+            trustList.push('1号', '3号');
+
+            if(suspicionList.length === 0) {
+                suspicionList.push('暂无明确目标');
+            }
+            if(trustList.length === 0) {
+                trustList.push('暂无明确目标');
+            }
+
+
+            let taskSize;
+            switch(playerCount) {
+                case '5':
+                case '6':
+                    taskSize = currentRound <= 2 ? 2 : 3;
+                    break;
+                case '7':
+                case '8':
+                    taskSize = [2,3,3,4,4][currentRound - 1] || 4;
+                    break;
+                case '9':
+                case '10':
+                    taskSize = [3,4,4,5,5][currentRound - 1] || 5;
+                    break;
+                default:
+                    taskSize = 3;
+            }
+
+            return `
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-semibold primary-text">本轮概述</h3>
+                        <p>在第 ${currentRound} 轮中，共有 ${transcripts.length} 位玩家发言。发言中提及了多个角色，话题主要围绕任务选人展开。</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold primary-text">关键词频率</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            ${Objectentries(keywords).map(([word, freq]) => `
+                                <div class="flex items-center justify-between p-2 rounded-lg ${freq === '高' ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-700'}">
+                                    <span>${word}</span>
+                                    <span class="font-bold ${freq === '高' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}">${freq}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h3 class="text-lg font-semibold primary-text">可疑对象</h3>
+                            <ul class="list-disc list-inside space-y-1">
+                                ${suspicionList.map(player => `<li>${player}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold primary-text">可信对象</h3>
+                             <ul class="list-disc list-inside space-y-1">
+                                ${trustList.map(player => `<li>${player}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold primary-text">本轮建议</h3>
+                        <p>根据发言分析，建议本轮任务选择 ${taskSize} 人，可考虑包含 ${trustList.join('、')}。建议派西维尔注意观察 ${suspicionList.join('、')} 的投票行为，以确定其真实身份。</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Event listener for player count change to update max round
+        document.getElementById('player-count').addEventListener('change', (e) => {
+            const maxRound = 5; // In Avalon, there are always 5 rounds
+            document.getElementById('current-round').max = maxRound;
+        });
+
+    </script>
+</body>
+</html>
