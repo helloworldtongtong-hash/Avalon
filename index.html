@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿瓦隆助手</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>阿瓦隆发言分析助手</h1>
+        
+        <!-- 玩家人数选择 -->
+        <div class="setup-box">
+            <h3>选择本局人数</h3>
+            <select id="playerCount">
+                <option value="5">5人局</option>
+                <option value="6">6人局</option>
+                <option value="7">7人局</option>
+                <option value="8">8人局</option>
+                <option value="9">9人局</option>
+                <option value="10">10人局</option>
+            </select>
+            <button id="startGame">🚀 开始游戏</button>
+        </div>
+
+        <!-- 角色配置显示 -->
+        <div id="roleConfig" class="hidden">
+            <h3>本局角色配置</h3>
+            <div id="goodRoles" class="role-list"></div>
+            <div id="evilRoles" class="role-list"></div>
+        </div>
+
+        <!-- 发言记录区域 -->
+        <div id="gamePanel" class="hidden">
+            <div class="recording-box">
+                <div id="currentPlayer">当前玩家：玩家1</div>
+                <button id="toggleMic">🎤 开始录音</button>
+                <button id="nextPlayer">🔀 切换下一个玩家</button>
+                <div id="transcript"></div>
+            </div>
+
+            <!-- 发言历史 -->
+            <div class="history-box">
+                <h3>发言历史</h3>
+                <ul id="speechHistory"></ul>
+            </div>
+
+            <!-- 分析按钮 -->
+            <button id="analyzeBtn" disabled>🤖 开始分析本轮局势</button>
+            
+            <!-- 分析结果 -->
+            <div id="analysisResult" class="hidden">
+                <h3>AI 分析结果</h3>
+                <div id="resultText"></div>
+                <button id="speakBtn">🔊 朗读建议</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

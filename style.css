@@ -1,0 +1,81 @@
+body {
+    font-family: 'Helvetica Neue', sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #6a1b9a;
+    text-align: center;
+}
+
+.setup-box, .recording-box, .history-box, #roleConfig {
+    background: #f9f9f9;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+}
+
+button, select {
+    background: #6a1b9a;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #8e24aa;
+}
+
+button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+#transcript {
+    margin-top: 10px;
+    padding: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    min-height: 60px;
+}
+
+#speechHistory li {
+    margin: 5px 0;
+    padding: 5px;
+    background: white;
+    border-left: 3px solid #6a1b9a;
+}
+
+.role-list {
+    padding: 10px;
+    background: white;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.role-list.good {
+    border-left: 3px solid #4CAF50;
+}
+
+.role-list.evil {
+    border-left: 3px solid #F44336;
+}
+
+.hidden {
+    display: none;
+}
